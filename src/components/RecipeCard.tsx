@@ -3,12 +3,9 @@ import {
   Clock,
   Flame,
   Bookmark,
-  ChefHat,
   ChevronRight,
-  Sparkles,
   Play,
   CheckCircle2,
-  AlertTriangle,
 } from 'lucide-react';
 import { Recipe } from '../types';
 
@@ -30,7 +27,6 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   isBookmarked,
 }) => {
   const isMy = language === 'my';
-
   const totalTime = (recipe.prepTimeMinutes || 0) + (recipe.cookTimeMinutes || 0);
 
   // Difficulty badge color
@@ -45,12 +41,12 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-amber-200/90 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+    <div className="bg-white rounded-2xl sm:rounded-3xl border border-amber-200/90 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
       <div>
         {/* Top Header Card Bar */}
-        <div className="p-5 pb-3 bg-gradient-to-b from-amber-50/70 to-white border-b border-amber-100">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
+        <div className="p-4 sm:p-5 pb-3 bg-gradient-to-b from-amber-50/70 to-white border-b border-amber-100">
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-600 text-white shadow-xs">
                 {recipe.category || (isMy ? 'မြန်မာဟင်း' : 'Myanmar Dish')}
               </span>
@@ -63,8 +59,8 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
               </span>
               {recipe.pantryMatchScore && (
                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  {recipe.pantryMatchScore}% {isMy ? 'ကိုက်ညီ' : 'Match'}
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span>{recipe.pantryMatchScore}% {isMy ? 'ကိုက်ညီ' : 'Match'}</span>
                 </span>
               )}
             </div>
@@ -76,7 +72,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
                 e.stopPropagation();
                 onToggleBookmark(recipe);
               }}
-              className={`p-2 rounded-xl transition-colors ${
+              className={`p-2 rounded-xl transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center ${
                 isBookmarked
                   ? 'bg-amber-500 text-white shadow-xs'
                   : 'bg-stone-100 text-stone-500 hover:text-amber-600 hover:bg-amber-50'
@@ -88,7 +84,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
           </div>
 
           {/* Titles */}
-          <h3 className="mt-3 text-lg sm:text-xl font-bold text-stone-900 group-hover:text-amber-800 transition-colors leading-snug">
+          <h3 className="mt-2.5 sm:mt-3 text-base sm:text-lg font-bold text-stone-900 group-hover:text-amber-800 transition-colors leading-snug">
             {recipe.titleMy}
           </h3>
           {recipe.titleEn && (
@@ -105,34 +101,34 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="px-5 py-3 grid grid-cols-3 gap-2 border-b border-stone-100 bg-stone-50/50 text-center">
-          <div className="p-1.5 rounded-xl bg-white border border-stone-200/80">
+        <div className="px-4 sm:px-5 py-2.5 grid grid-cols-3 gap-1.5 sm:gap-2 border-b border-stone-100 bg-stone-50/50 text-center">
+          <div className="p-1 rounded-xl bg-white border border-stone-200/80">
             <span className="text-[10px] text-stone-500 block">{isMy ? 'ကြာချိန်' : 'Total Time'}</span>
             <span className="text-xs font-bold text-stone-800 flex items-center justify-center gap-1 mt-0.5">
-              <Clock className="w-3 h-3 text-amber-600" />
-              {totalTime > 0 ? `${totalTime} ${isMy ? 'မိနစ်' : 'min'}` : `${recipe.cookTimeMinutes} min`}
+              <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+              <span className="truncate">{totalTime > 0 ? `${totalTime} ${isMy ? 'မိနစ်' : 'min'}` : `${recipe.cookTimeMinutes} min`}</span>
             </span>
           </div>
 
-          <div className="p-1.5 rounded-xl bg-white border border-stone-200/80">
+          <div className="p-1 rounded-xl bg-white border border-stone-200/80">
             <span className="text-[10px] text-stone-500 block">{isMy ? 'လူဦးရေ' : 'Servings'}</span>
-            <span className="text-xs font-bold text-stone-800 block mt-0.5">
+            <span className="text-xs font-bold text-stone-800 block mt-0.5 truncate">
               {recipe.servings} {isMy ? 'ယောက်စာ' : 'servings'}
             </span>
           </div>
 
-          <div className="p-1.5 rounded-xl bg-white border border-stone-200/80">
+          <div className="p-1 rounded-xl bg-white border border-stone-200/80">
             <span className="text-[10px] text-stone-500 block">{isMy ? 'အဆင့်' : 'Steps'}</span>
-            <span className="text-xs font-bold text-stone-800 block mt-0.5">
+            <span className="text-xs font-bold text-stone-800 block mt-0.5 truncate">
               {recipe.steps?.length || 0} {isMy ? 'ဆင့်' : 'steps'}
             </span>
           </div>
         </div>
 
         {/* Ingredients Summary */}
-        <div className="p-5 space-y-3">
+        <div className="p-4 sm:p-5 space-y-2.5">
           <div>
-            <span className="text-xs font-bold text-stone-700 block mb-1.5">
+            <span className="text-xs font-bold text-stone-700 block mb-1">
               {isMy ? 'ပါဝင်သော အဓိကပစ္စည်းများ:' : 'Main Ingredients:'}
             </span>
             <div className="flex flex-wrap gap-1">
@@ -155,7 +151,6 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
           {/* Missing items note if any */}
           {recipe.missingOrOptionalIngredients && recipe.missingOrOptionalIngredients.length > 0 && (
             <div className="text-[11px] text-amber-800 bg-amber-50/70 p-2 rounded-xl border border-amber-200/80 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
               <span>
                 {isMy ? 'ထပ်ဆောင်းထည့်နိုင်သော ပစ္စည်း:' : 'Optional staple:'}{' '}
                 {recipe.missingOrOptionalIngredients.join('၊ ')}
@@ -165,7 +160,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
 
           {/* Chef Tip sneak peek */}
           {recipe.chefTips && (
-            <div className="text-[11px] text-stone-600 italic bg-stone-50 p-2.5 rounded-xl border border-stone-200 line-clamp-2">
+            <div className="text-[11px] text-stone-600 italic bg-stone-50 p-2 rounded-xl border border-stone-200 line-clamp-2">
               💡 {recipe.chefTips}
             </div>
           )}
@@ -173,23 +168,23 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="p-5 pt-0 flex gap-2">
+      <div className="p-4 sm:p-5 pt-0 flex gap-2">
         <button
           type="button"
           onClick={() => onSelectRecipe(recipe)}
-          className="flex-1 py-2.5 px-3 text-xs sm:text-sm font-semibold text-stone-800 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors text-center border border-stone-200 flex items-center justify-center gap-1"
+          className="flex-1 py-2 px-3 text-xs sm:text-sm font-bold text-stone-800 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 rounded-xl transition-colors text-center border border-stone-200 flex items-center justify-center gap-1 min-h-[42px] cursor-pointer"
         >
-          <span>{isMy ? 'အသေးစိတ်ကြည့်ရန်' : 'View Recipe'}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <span>{isMy ? 'အသေးစိတ်' : 'Details'}</span>
+          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
         </button>
 
         <button
           type="button"
           onClick={() => onStartCooking(recipe)}
-          className="flex-1 py-2.5 px-3 text-xs sm:text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition-all shadow-md shadow-amber-600/20 text-center flex items-center justify-center gap-1.5 active:scale-95"
+          className="flex-1 py-2 px-3 text-xs sm:text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 active:bg-amber-800 rounded-xl transition-all shadow-md shadow-amber-600/20 text-center flex items-center justify-center gap-1.5 active:scale-95 min-h-[42px] cursor-pointer"
         >
-          <Play className="w-3.5 h-3.5 fill-current" />
-          <span>{isMy ? 'ချက်ပြုတ်စတင်မည်' : 'Cook Now'}</span>
+          <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+          <span>{isMy ? 'ချက်မည်' : 'Cook'}</span>
         </button>
       </div>
     </div>

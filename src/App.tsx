@@ -9,14 +9,13 @@ import {
   Sparkles,
   Utensils,
   BookOpen,
-  CheckCircle,
   AlertCircle,
-  RotateCcw,
-  Search,
-  Filter,
-  Flame,
+  Clock,
   Camera,
-  Heart,
+  Bookmark,
+  Languages,
+  Flame,
+  ArrowRight,
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { IngredientInputSection } from './components/IngredientInputSection';
@@ -24,6 +23,7 @@ import { RecipeCard } from './components/RecipeCard';
 import { RecipeDetailModal } from './components/RecipeDetailModal';
 import { CookingModeModal } from './components/CookingModeModal';
 import { BookmarksView } from './components/BookmarksView';
+import { RecipeTemplatesSection } from './components/RecipeTemplatesSection';
 import { Recipe, GenerationResult } from './types';
 
 export default function App() {
@@ -44,6 +44,9 @@ export default function App() {
   const [selectedRecipeForDetail, setSelectedRecipeForDetail] = useState<Recipe | null>(null);
   const [selectedRecipeForCooking, setSelectedRecipeForCooking] = useState<Recipe | null>(null);
   const [showBookmarksModal, setShowBookmarksModal] = useState(false);
+
+  // Navigation tab: 'generator' | 'templates'
+  const [activeTab, setActiveTab] = useState<'generator' | 'templates'>('generator');
 
   // Bookmarks (saved in localStorage)
   const [bookmarkedRecipes, setBookmarkedRecipes] = useState<Recipe[]>(() => {
@@ -78,6 +81,20 @@ export default function App() {
     return bookmarkedRecipes.some((r) => r.id === recipe.id || r.titleMy === recipe.titleMy);
   };
 
+  const handleLoadTemplateIntoGenerator = (ingredients: string[], cuisine: string) => {
+    setActiveTab('generator');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    handleGenerate({
+      ingredients,
+      pantryStaples: ['ဆီ', 'ဆား', 'ဟင်းခတ်မှုန့်', 'ကြက်သွန်နီ', 'ကြက်သွန်ဖြူ', 'ငံပြာရည်'],
+      cuisineType: cuisine || 'အားလုံး',
+      cookingTimeMax: 'မည်သည့်အချိန်မဆို',
+      servings: 2,
+      dietary: '',
+      model: selectedModel,
+    });
+  };
+
   const handleToggleLanguage = () => {
     setLanguage((prev) => (prev === 'my' ? 'en' : 'my'));
   };
@@ -85,10 +102,11 @@ export default function App() {
   const handleResetSearch = () => {
     setGenerationResult(null);
     setErrorMessage(null);
+    setActiveTab('generator');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Generate recipe via Express backend calling Gemini 3.8
+  // Generate recipe via Express backend calling Gemini / OpenRouter
   const handleGenerate = async (payload: {
     ingredients: string[];
     pantryStaples: string[];
@@ -97,6 +115,7 @@ export default function App() {
     cookingTimeMax: string;
     servings: number;
     dietary: string;
+    model?: string;
   }) => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -154,7 +173,6 @@ export default function App() {
 
       setGenerationResult(data);
 
-      // Scroll smoothly to results
       setTimeout(() => {
         const resultsEl = document.getElementById('recipes-result-anchor');
         if (resultsEl) {
@@ -202,174 +220,325 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Input Form Section */}
-        <IngredientInputSection
-          language={language}
-          onGenerate={handleGenerate}
-          isLoading={isLoading}
-          loadingMessage={loadingMessage}
-          selectedModel={selectedModel}
-          onSelectModel={setSelectedModel}
-        />
-
-        {/* Error Alert */}
-        {errorMessage && (
-          <div className="mb-8 p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 text-sm flex items-start justify-between gap-3 shadow-xs">
-            <div className="flex items-start gap-2.5">
-              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-bold block">
-                  {isMy ? 'အသိပေးချက်' : 'Notice'}
-                </strong>
-                <p className="mt-0.5">{errorMessage}</p>
-              </div>
-            </div>
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 pb-24 sm:pb-12">
+        {/* Navigation Tabs between AI Generator and 10 Curated Templates */}
+        <div className="flex items-center justify-center mb-4 sm:mb-6">
+          <div className="bg-white p-1 rounded-2xl border border-amber-200/90 shadow-xs flex items-center gap-1 max-w-md w-full">
             <button
-              onClick={() => setErrorMessage(null)}
-              className="text-rose-500 hover:text-rose-800 text-xs font-semibold underline shrink-0"
+              type="button"
+              onClick={() => setActiveTab('generator')}
+              className={`flex-1 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-h-[40px] ${
+                activeTab === 'generator'
+                  ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+              }`}
             >
-              {isMy ? 'ပိတ်မည်' : 'Dismiss'}
+              <Sparkles className="w-4 h-4 shrink-0" />
+              <span className="truncate">
+                {isMy ? 'AI စားဖိုမှူး' : 'AI Chef'}
+              </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('templates')}
+              className={`flex-1 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-h-[40px] ${
+                activeTab === 'templates'
+                  ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md shadow-red-600/20'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+              }`}
+            >
+              <BookOpen className="w-4 h-4 shrink-0" />
+              <span className="truncate">{isMy ? 'Templates (၁၀)' : 'Templates (10)'}</span>
+              <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.2 rounded-full font-black border border-red-200 shrink-0">
+                Mala 🔥
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* 1. Templates Tab View */}
+        {activeTab === 'templates' && (
+          <div className="animate-in fade-in duration-200">
+            <RecipeTemplatesSection
+              language={language}
+              onSelectRecipe={(r) => setSelectedRecipeForDetail(r)}
+              onStartCooking={(r) => setSelectedRecipeForCooking(r)}
+              onToggleBookmark={(r) => toggleBookmark(r)}
+              isBookmarked={(r) => isRecipeBookmarked(r)}
+              onLoadIntoGenerator={handleLoadTemplateIntoGenerator}
+            />
           </div>
         )}
 
-        {/* Generated Recipes Section */}
-        {generationResult && generationResult.recipes && (
-          <section id="recipes-result-anchor" className="space-y-6 pt-4 animate-in fade-in duration-300">
-            {/* Kitchen Summary & AI Chef Greeting */}
-            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-amber-200/90 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 shadow-xs">
-                  <ChefHat className="w-7 h-7" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-700">
-                      {isMy ? 'စားဖိုမှူး၏ အကြံပြုချက်' : 'AI Chef Advice'}
-                    </span>
-                    <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">
-                      {generationResult.recipes.length} {isMy ? 'ဟင်းချက်နည်း တွေ့ရှိသည်' : 'Recipes Available'}
-                    </span>
+        {/* 2. AI Generator Tab View */}
+        {activeTab === 'generator' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Input Form Section */}
+            <IngredientInputSection
+              language={language}
+              onGenerate={handleGenerate}
+              isLoading={isLoading}
+              loadingMessage={loadingMessage}
+              selectedModel={selectedModel}
+              onSelectModel={setSelectedModel}
+            />
+
+            {/* Error Alert */}
+            {errorMessage && (
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 text-xs sm:text-sm flex items-start justify-between gap-3 shadow-xs">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="font-bold block">
+                      {isMy ? 'အသိပေးချက်' : 'Notice'}
+                    </strong>
+                    <p className="mt-0.5 leading-relaxed">{errorMessage}</p>
                   </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-stone-900 mt-0.5">
-                    {isMy
-                      ? 'သင့်မီးဖိုချောင်အတွက် အကောင်းဆုံး ဟင်းလျာများ'
-                      : 'Recommended Dishes for Your Kitchen'}
-                  </h2>
-                  {generationResult.kitchenSummary && (
-                    <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-2xl leading-relaxed">
-                      {generationResult.kitchenSummary}
-                    </p>
+                </div>
+                <button
+                  onClick={() => setErrorMessage(null)}
+                  className="text-rose-600 hover:text-rose-900 text-xs font-bold underline shrink-0 cursor-pointer min-h-[36px] flex items-center"
+                >
+                  {isMy ? 'ပိတ်မည်' : 'Dismiss'}
+                </button>
+              </div>
+            )}
+
+            {/* Generated Recipes Section */}
+            {generationResult && generationResult.recipes && (
+              <section id="recipes-result-anchor" className="space-y-5 sm:space-y-6 pt-2 animate-in fade-in duration-300">
+                {/* Kitchen Summary & AI Chef Greeting */}
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-amber-200/90 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3 sm:gap-3.5 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 shadow-xs">
+                      <ChefHat className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-700">
+                          {isMy ? 'စားဖိုမှူး၏ အကြံပြုချက်' : 'AI Chef Advice'}
+                        </span>
+                        <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
+                          {generationResult.recipes.length} {isMy ? 'မျိုး' : 'dishes'}
+                        </span>
+                      </div>
+                      <h2 className="text-base sm:text-xl font-bold text-stone-900 leading-snug">
+                        {isMy
+                          ? 'သင့်မီးဖိုချောင်အတွက် အကောင်းဆုံး ဟင်းလျာများ'
+                          : 'Recommended Dishes for Your Kitchen'}
+                      </h2>
+                      {generationResult.kitchenSummary && (
+                        <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-2xl leading-relaxed">
+                          {generationResult.kitchenSummary}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Detected Ingredients tag list */}
+                  {generationResult.detectedIngredients && generationResult.detectedIngredients.length > 0 && (
+                    <div className="bg-amber-50/80 p-3 rounded-2xl border border-amber-200 sm:max-w-xs w-full shrink-0">
+                      <span className="text-[11px] font-bold text-amber-900 block mb-1">
+                        {isMy ? 'တွေ့ရှိသော ပစ္စည်းများ:' : 'Identified Ingredients:'}
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {generationResult.detectedIngredients.map((ing, i) => (
+                          <span
+                            key={i}
+                            className="text-[11px] px-2 py-0.5 rounded-md bg-white text-stone-700 border border-amber-200 font-medium"
+                          >
+                            {isMy ? ing.nameMy : ing.nameEn}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
 
-              {/* Detected Ingredients tag list */}
-              {generationResult.detectedIngredients && generationResult.detectedIngredients.length > 0 && (
-                <div className="bg-amber-50/80 p-3 rounded-2xl border border-amber-200 sm:max-w-xs w-full">
-                  <span className="text-[11px] font-bold text-amber-900 block mb-1">
-                    {isMy ? 'ဓာတ်ပုံ/စာမှ တွေ့ရှိသော ပစ္စည်းများ:' : 'Identified Ingredients:'}
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {generationResult.detectedIngredients.map((ing, i) => (
-                      <span
-                        key={i}
-                        className="text-[11px] px-2 py-0.5 rounded-md bg-white text-stone-700 border border-amber-200 font-medium"
-                      >
-                        {isMy ? ing.nameMy : ing.nameEn}
-                      </span>
-                    ))}
+                {/* Recipe Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {filteredRecipes?.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.id}
+                      recipe={recipe}
+                      language={language}
+                      onSelectRecipe={(r) => setSelectedRecipeForDetail(r)}
+                      onStartCooking={(r) => setSelectedRecipeForCooking(r)}
+                      onToggleBookmark={(r) => toggleBookmark(r)}
+                      isBookmarked={isRecipeBookmarked(recipe)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Home Highlights when no results yet */}
+            {!generationResult && (
+              <div className="space-y-6 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 text-stone-700">
+                  <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-amber-200/60 shadow-xs flex items-start gap-3 sm:gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                      <Camera className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-stone-900 mb-1">
+                        {isMy ? '၁။ ဓာတ်ပုံရိုက်ပို့ပါ' : '1. Snap a Photo'}
+                      </h4>
+                      <p className="text-xs text-stone-500 leading-relaxed">
+                        {isMy
+                          ? 'ရေခဲသေတ္တာ သို့မဟုတ် မီးဖိုချောင်ရှိ ဟင်းချက်စရာ ပစ္စည်းများကို ဓာတ်ပုံရိုက်တင်ပေးပါ။'
+                          : 'Take a picture of fridge or kitchen shelf ingredients.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-amber-200/60 shadow-xs flex items-start gap-3 sm:gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-stone-900 mb-1">
+                        {isMy ? '၂။ ချက်နည်းရယူပါ' : '2. Instant Recipes'}
+                      </h4>
+                      <p className="text-xs text-stone-500 leading-relaxed">
+                        {isMy
+                          ? 'ရှိသောပစ္စည်းများဖြင့် အံဝင်ဂွင်ကျဖြစ်မည့် မြန်မာဟင်း၊ ဆီပြန်ဟင်းများကို AI က ဖော်ထုတ်ပေးမည်။'
+                          : 'AI formulates step-by-step Myanmar traditional and quick dishes.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-amber-200/60 shadow-xs flex items-start gap-3 sm:gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-stone-900 mb-1">
+                        {isMy ? '၃။ အချိန်မှတ်ချက်ပါ' : '3. Kitchen Timers'}
+                      </h4>
+                      <p className="text-xs text-stone-500 leading-relaxed">
+                        {isMy
+                          ? 'စာလုံးကြီးကြီး၊ အချိန်မှတ်နာရီ (Timer) နှင့် အသံဖတ်ရှုမှုဖြင့် လက်တွေ့ချက်ပြုတ်နိုင်သည်။'
+                          : 'Hands-free cooking assistant with step timers and voice audio.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* Recipe Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredRecipes?.map((recipe) => (
-                <RecipeCard
-                  key={recipe.id}
-                  recipe={recipe}
-                  language={language}
-                  onSelectRecipe={(r) => setSelectedRecipeForDetail(r)}
-                  onStartCooking={(r) => setSelectedRecipeForCooking(r)}
-                  onToggleBookmark={(r) => toggleBookmark(r)}
-                  isBookmarked={isRecipeBookmarked(recipe)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+                {/* Banner Callout to 10 Curated Templates */}
+                <div
+                  onClick={() => {
+                    setActiveTab('templates');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="bg-gradient-to-r from-red-600 via-orange-600 to-amber-600 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-orange-600/20 cursor-pointer hover:shadow-xl transition-all group"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform">
+                      <Flame className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[11px] font-black uppercase tracking-wider bg-white text-red-600 px-2 py-0.5 rounded-full">
+                          🔥 {isMy ? 'အသင့်သုံး Templates' : 'Curated Templates'}
+                        </span>
+                        <span className="text-xs font-semibold text-white/90">
+                          {isMy ? 'မာလာရှမ်းကော အပါအဝင် ၁၀ မျိုး' : '10 Recipes incl. Mala'}
+                        </span>
+                      </div>
+                      <h3 className="text-base sm:text-xl font-black">
+                        {isMy
+                          ? 'မာလာရှမ်းကောနှင့် နာမည်ကြီး မြန်မာဟင်းချက်နည်း ၁၀ မျိုး ကြည့်ရန် နှိပ်ပါ'
+                          : 'Explore 10 Ready-to-Cook Myanmar Recipes (Mala Xiang Guo)'}
+                      </h3>
+                    </div>
+                  </div>
 
-        {/* Home Highlights / How it Works when no results yet */}
-        {!generationResult && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-stone-700 mt-2">
-            <div className="bg-white p-5 rounded-3xl border border-amber-200/60 shadow-xs flex items-start gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                <Camera className="w-5 h-5" />
+                  <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold bg-white text-stone-900 px-4 py-2 rounded-xl shrink-0 group-hover:bg-amber-50 transition-colors">
+                    <span>{isMy ? 'ချက်နည်း ၁၀ မျိုး ကြည့်မည်' : 'View Templates'}</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4 className="font-bold text-sm text-stone-900 mb-1">
-                  {isMy ? '၁။ ဓာတ်ပုံရိုက်ပို့ပါ' : '1. Snap a Photo'}
-                </h4>
-                <p className="text-xs text-stone-500 leading-relaxed">
-                  {isMy
-                    ? 'ရေခဲသေတ္တာ သို့မဟုတ် မီးဖိုချောင်ရှိ ဟင်းချက်စရာ ပစ္စည်းများကို ကင်မရာဖြင့် ဓာတ်ပုံရိုက်၍ တင်ပေးပါ။'
-                    : 'Take a quick picture of your fridge, kitchen shelf, or market ingredients.'}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white p-5 rounded-3xl border border-amber-200/60 shadow-xs flex items-start gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-bold text-sm text-stone-900 mb-1">
-                  {isMy ? '၂။ အဆင့်ဆင့် ချက်နည်းရယူပါ' : '2. Get Instant Recipes'}
-                </h4>
-                <p className="text-xs text-stone-500 leading-relaxed">
-                  {isMy
-                    ? 'ရှိသော ပစ္စည်းများဖြင့် အံဝင်ဂွင်ကျဖြစ်မည့် မြန်မာဟင်း၊ ဆီပြန်ဟင်း၊ ဟင်းချိုများကို AI က ဖော်ထုတ်ပေးမည်။'
-                    : 'Gemini AI formulates step-by-step Myanmar traditional and quick home recipes.'}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white p-5 rounded-3xl border border-amber-200/60 shadow-xs flex items-start gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                <Flame className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-bold text-sm text-stone-900 mb-1">
-                  {isMy ? '၃။ ချက်ပြုတ်မုဒ်ဖြင့် ချက်ပါ' : '3. Interactive Cooking Mode'}
-                </h4>
-                <p className="text-xs text-stone-500 leading-relaxed">
-                  {isMy
-                    ? 'စာလုံးကြီးကြီး၊ အချိန်မှတ်နာရီ (Timer) နှင့် အသံဖတ်ရှုမှုဖြင့် မီးဖိုချောင်ထဲတွင် လက်တွေ့ချက်ပြုတ်နိုင်သည်။'
-                    : 'Hands-free kitchen assistant mode with large text, timers, and audio alerts.'}
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="mt-12 border-t border-amber-200/70 bg-white py-6 text-center text-xs text-stone-500">
-        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 font-semibold text-stone-700">
-            <ChefHat className="w-4 h-4 text-amber-600" />
+      <footer className="mt-8 sm:mt-12 border-t border-amber-200/70 bg-white py-6 text-center text-xs text-stone-500">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 font-bold text-stone-700">
+            <ChefHat className="w-4 h-4 text-amber-600 shrink-0" />
             <span>{isMy ? 'မီးဖိုချောင် စားဖိုမှူး AI (Kitchen Chef Myanmar)' : 'Kitchen Chef Myanmar AI'}</span>
           </div>
-          <p>
+          <p className="text-stone-400">
             {isMy
               ? 'မီးဖိုချောင်ထဲရှိ ပစ္စည်းများဖြင့် ချက်ပြုတ်နည်း အဆင့်ဆင့် ဖန်တီးပေးသော AI အက်ပ်'
               : 'AI culinary assistant turning pantry ingredients into delicious home-cooked meals.'}
           </p>
         </div>
       </footer>
+
+      {/* Mobile Bottom Navigation Bar (Visible only on mobile devices < 640px) */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-amber-200/80 px-2 py-1.5 flex items-center justify-around shadow-lg pb-safe">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('generator');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className={`flex flex-col items-center justify-center p-1.5 rounded-xl text-[11px] font-bold transition-colors min-h-[44px] min-w-[64px] cursor-pointer ${
+            activeTab === 'generator' ? 'text-amber-700 bg-amber-50' : 'text-stone-500 hover:text-stone-800'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 shrink-0" />
+          <span className="mt-0.5">{isMy ? 'AI စားဖိုမှူး' : 'AI Chef'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('templates');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className={`flex flex-col items-center justify-center p-1.5 rounded-xl text-[11px] font-bold transition-colors min-h-[44px] min-w-[64px] cursor-pointer relative ${
+            activeTab === 'templates' ? 'text-red-700 bg-red-50' : 'text-stone-500 hover:text-stone-800'
+          }`}
+        >
+          <div className="relative">
+            <BookOpen className="w-4 h-4 shrink-0" />
+            <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-600 rounded-full" />
+          </div>
+          <span className="mt-0.5">{isMy ? 'ချက်နည်း ၁၀' : 'Templates'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowBookmarksModal(true)}
+          className="flex flex-col items-center justify-center p-1.5 rounded-xl text-[11px] font-bold text-stone-500 hover:text-stone-800 transition-colors min-h-[44px] min-w-[64px] cursor-pointer relative"
+        >
+          <div className="relative">
+            <Bookmark className="w-4 h-4 shrink-0" />
+            {bookmarkedRecipes.length > 0 && (
+              <span className="absolute -top-1 -right-2 bg-amber-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                {bookmarkedRecipes.length}
+              </span>
+            )}
+          </div>
+          <span className="mt-0.5">{isMy ? 'မှတ်ထားသော' : 'Saved'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleToggleLanguage}
+          className="flex flex-col items-center justify-center p-1.5 rounded-xl text-[11px] font-bold text-stone-500 hover:text-amber-800 transition-colors min-h-[44px] min-w-[64px] cursor-pointer"
+        >
+          <Languages className="w-4 h-4 shrink-0" />
+          <span className="mt-0.5">{isMy ? 'EN' : 'မြန်မာ'}</span>
+        </button>
+      </div>
 
       {/* Modals */}
       {/* 1. Recipe Detail Modal */}
